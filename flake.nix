@@ -31,12 +31,12 @@
         let
           pkgs = import nixpkgs {
             localSystem.system = system;
-            config.allowUnfree = true;
             overlays = [ self.overlays.default ];
           };
         in
         {
           mesa-git = pkgs.mesa-git;
+          libdrm-git = pkgs.libdrm-git;
           default = pkgs.mesa-git;
         }
       );
