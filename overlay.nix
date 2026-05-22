@@ -208,7 +208,6 @@ let
           printf '\n' >> meson.options
           cat ${./clang-libdir-option.meson} >> meson.options
         fi
-
         # Disable rusticl ICD file auto-install (nixpkgs constructs its own with absolute path).
         if [ -f src/gallium/targets/rusticl/meson.build ]; then
           if grep -qF "install : true" src/gallium/targets/rusticl/meson.build; then
@@ -225,32 +224,6 @@ let
       outputs = filterOutputs (old.outputs or [ "out" ]);
 
       mesonFlags = filterMesonFlags (overrideDriverFlags (old.mesonFlags or [ ]));
-
-      # Rewrite postInstall to only move outputs that actually exist
-      postInstall = ''
-        # cross_tools: only move if the drivers that produce them are built
-        ${lib.optionalString hasCrossToolDrivers ''
-          moveToOutput bin/asahi_clc $cross_tools
-          moveToOutput bin/intel_clc $cross_tools
-          moveToOutput bin/mesa_clc $cross_tools
-          moveToOutput bin/panfrost_compile $cross_tools
-          moveToOutput bin/panfrost_texfeatures $cross_tools
-          moveToOutput bin/panfrostdump $cross_tools
-          moveToOutput bin/pco_clc $cross_tools
-          moveToOutput bin/vtn_bindgen2 $cross_tools
-        ''}
-
-        # OpenCL (always built — rusticl is enabled by default)
-        moveToOutput "lib/lib*OpenCL*" $opencl
-        mkdir -p $opencl/etc/OpenCL/vendors/
-        echo $opencl/lib/libRusticlOpenCL.so > $opencl/etc/OpenCL/vendors/rusticl.icd
-
-        # spirv2dxil: only present when d3d12 gallium driver is built
-        ${lib.optionalString hasD3d12 ''
-          moveToOutput bin/spirv2dxil $spirv2dxil
-          moveToOutput "lib/libspirv_to_dxil*" $spirv2dxil
-        ''}
-      '';
 
       env = (old.env or { }) // {
         MESON_PACKAGE_CACHE_DIR = packageCache;
