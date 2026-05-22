@@ -233,7 +233,6 @@ glxinfo | grep "OpenGL version"
 # Vulkan driver info should show RADV with git version
 vulkaninfo | grep driverInfo
 ```
-
 ## Repository Structure
 
 ```
@@ -245,9 +244,10 @@ mesa-git-nix/
 ├── clang-libdir-option.meson   # Meson option snippet (avoids Nix string escaping)
 ├── version.json                # Pinned commit: rev, hash, version, date
 ├── wraps.json                  # Rust crate deps for MESON_PACKAGE_CACHE_DIR
-├── update.sh                   # Script to pin latest mesa main commit
-├── pkgs/
-│   └── mesa-git.nix            # Package documentation (build via overlay)
+├── scripts/
+│   ├── update.sh                # Canonical updater (synced from standard)
+│   ├── check-readme-sections.sh # Pre-commit README lint
+│   └── update-readme-options.sh # README options section generator
 ├── LICENSE
 └── README.md
 ```
