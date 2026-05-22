@@ -125,13 +125,15 @@ let
       # Determine the effective gallium driver list for output/postInstall decisions
       effectiveGallium = if galliumDrivers != null then galliumDrivers else mesa.galliumDrivers or [ ];
 
-      # d3d12 produces spirv2dxil; asahi/panfrost produce cross_tools binaries
-      # When using default drivers (no custom list), exclude d3d12 — it's unreliable on git main
-      # and produces spirv2dxil output that may not build. Users can opt-in via mkMesaGit.
+      # d3d12 produces spirv2dxil; asahi/panfrost produce cross_tools binaries.
+      # When using default drivers (nixpkgs list), assume all outputs are built.
+      # When using custom drivers, only enable outputs for actually-selected drivers.
+      # Note: d3d12 is excluded from default builds (unreliable on git main).
       hasD3d12 = galliumDrivers != null && builtins.elem "d3d12" effectiveGallium;
       hasAsahi = builtins.elem "asahi" effectiveGallium;
       hasPanfrost = builtins.elem "panfrost" effectiveGallium;
-      hasCrossToolDrivers = galliumDrivers != null && (hasAsahi || hasPanfrost);
+      hasCrossToolDrivers =
+        if galliumDrivers != null then (hasAsahi || hasPanfrost) else true;
 
       # Replace driver flags in mesonFlags if custom lists are provided
       overrideDriverFlags =
