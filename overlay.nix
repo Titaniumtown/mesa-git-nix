@@ -180,23 +180,34 @@ let
       postPatch = ''
         patchShebangs .
 
-        # Replicate opencl.patch effect: use clang-libdir meson option instead of llvm query
-        if grep -q "dep_llvm.get_variable(cmake : 'LLVM_LIBRARY_DIR'" meson.build 2>/dev/null; then
+        # Replicate opencl.patch effect: use clang-libdir meson option instead of llvm query.
+        # If the string is present, replace it. If absent, fail loudly so the
+        # maintainer can investigate and update the postPatch.
+        if grep -qF "dep_llvm.get_variable(cmake : 'LLVM_LIBRARY_DIR'" meson.build; then
           substituteInPlace meson.build \
             --replace-fail "dep_llvm.get_variable(cmake : 'LLVM_LIBRARY_DIR', configtool: 'libdir')" \
                            "get_option('clang-libdir')"
+        else
+          echo "ERROR: clang-libdir pattern not found in meson.build — Mesa may have refactored the build system."
+          echo "The overlay postPatch must be updated. Check upstream meson.build for the new clang libdir logic."
+          exit 1
         fi
 
-        # Add clang-libdir meson option if not already present
-        if ! grep -q "clang-libdir" meson.options 2>/dev/null; then
+        # Add clang-libdir meson option definition, guarding against missing trailing newline
+        if ! grep -qF "clang-libdir" meson.options; then
+          printf '\n' >> meson.options
           cat ${./clang-libdir-option.meson} >> meson.options
         fi
 
-        # Disable rusticl ICD file auto-install (nixpkgs constructs its own with absolute path)
-        # Only target the configure_file block, not the shared_library install
+        # Disable rusticl ICD file auto-install (nixpkgs constructs its own with absolute path).
         if [ -f src/gallium/targets/rusticl/meson.build ]; then
-          sed -i '/configure_file/,/^)/{s/install : true/install : false/}' \
-            src/gallium/targets/rusticl/meson.build || true
+          if grep -qF "install : true" src/gallium/targets/rusticl/meson.build; then
+            sed -i '/configure_file/,/^)/{s/install : true/install : false/}' \
+              src/gallium/targets/rusticl/meson.build
+            if grep -qF "install : true" src/gallium/targets/rusticl/meson.build; then
+              echo "WARNING: rusticl ICD install : true may not have been fully replaced"
+            fi
+          fi
         fi
       '';
 
