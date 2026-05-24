@@ -307,6 +307,8 @@ in
     };
   # Companion libdrm-git (tracks same upstream repo, same pin)
   inherit libdrm-git libdrm-git-32;
+  # Globally override libdrm so Xwayland/gamescope/mesa all share the same ABI
+  libdrm = libdrm-git;
 
   # Expose presets and resolver for downstream modules
   mesa-git-lib = {
