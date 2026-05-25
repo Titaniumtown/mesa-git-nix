@@ -8,7 +8,7 @@
   "packageFile": "version.json",
   "versionScheme": "rev-only",
   "hashes": [
-    { "field": "hash", "file": "version.json" }
+    {"field": "hash", "file": "version.json"}
   ],
   "verify": {
     "check": "elf"

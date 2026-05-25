@@ -431,17 +431,15 @@ for entry in "${HASH_ENTRIES[@]}"; do
 done
 
 # set_hash <field> <file> <value> — replaces the field's sha256 value,
-# preserving whichever operator (`=` or `?`) was used.
+# preserving whichever operator (`=`, `?`, or JSON `:`) was used.
 set_hash() {
-  local field_re
+  local field_re sep
   field_re=$(re_esc "$1")
-  if [[ "$2" == *.json ]]; then
-    # JSON-resident hash (e.g. version.json `"hash": "sha256-..."`): swap the
-    # value via the `"key":` form, leaving the file's formatting intact.
-    sed -i -E "s|(\"${field_re}\"[[:space:]]*:[[:space:]]*)\"sha256-[^\"]*\"|\1\"${3}\"|" "$2"
-  else
-    sed -i "s|\(${field_re}[[:space:]]*[?=][[:space:]]*\)\"sha256-[^\"]*\"|\1\"${3}\"|" "$2"
-  fi
+  case "$2" in
+  *.json) sep=":"; field_re='"'${field_re}'"' ;;
+  *)      sep="[?=]" ;;
+  esac
+  sed -i "s|\(${field_re}[[:space:]]*${sep}[[:space:]]*\)\"sha256-[^\"]*\"|\1\"${3}\"|" "$2"
 }
 
 if [ "${#HF_FIELD[@]}" -gt 0 ]; then
