@@ -19,6 +19,7 @@ let
         repo = "drm";
         inherit (libdrmVersionInfo) rev hash;
       };
+
     });
 
   libdrm-git = mkLibdrmGit prev.libdrm;
@@ -132,8 +133,7 @@ let
       hasD3d12 = galliumDrivers != null && builtins.elem "d3d12" effectiveGallium;
       hasAsahi = builtins.elem "asahi" effectiveGallium;
       hasPanfrost = builtins.elem "panfrost" effectiveGallium;
-      hasCrossToolDrivers =
-        if galliumDrivers != null then (hasAsahi || hasPanfrost) else true;
+      hasCrossToolDrivers = if galliumDrivers != null then (hasAsahi || hasPanfrost) else true;
 
       # Replace driver flags in mesonFlags if custom lists are provided
       overrideDriverFlags =
