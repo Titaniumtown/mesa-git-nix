@@ -1,19 +1,8 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
-let
-  cfg = config.mesa-git;
-  mesaPkg = if cfg.drivers == [ ] then pkgs.mesa-git else pkgs.mkMesaGit { vendors = cfg.drivers; };
-
-  mesaPkg32 =
-    if pkgs.stdenv.hostPlatform.isx86_64 then
-      if cfg.drivers == [ ] then pkgs.mesa-git-32 else pkgs.mkMesaGit32 { vendors = cfg.drivers; }
-    else
-      null;
-in
 {
   options.mesa-git = {
     enable = lib.mkEnableOption "Use mesa-git (bleeding-edge) instead of nixpkgs mesa";
@@ -38,12 +27,26 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable (
+  config = lib.mkIf config.mesa-git.enable (
+    let
+      mesaPkg =
+        if config.mesa-git.drivers == [ ] then
+          config._module.args.pkgs.mesa-git
+        else
+          config._module.args.pkgs.mkMesaGit { vendors = config.mesa-git.drivers; };
+
+      mesaPkg32 =
+        if config._module.args.pkgs.stdenv.hostPlatform.isx86_64 then
+          if config.mesa-git.drivers == [ ] then
+            config._module.args.pkgs.pkgsi686Linux.mesa-git
+          else
+            config._module.args.pkgs.mkMesaGit32 { vendors = config.mesa-git.drivers; }
+        else
+          null;
+    in
     {
-      hardware.graphics.package = lib.mkForce mesaPkg;
-    }
-    // lib.optionalAttrs (mesaPkg32 != null) {
-      hardware.graphics.package32 = lib.mkForce mesaPkg32;
+      hardware.graphics.package = mesaPkg;
+      hardware.graphics.package32 = mesaPkg32;
     }
   );
 }
