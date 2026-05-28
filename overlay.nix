@@ -142,10 +142,10 @@ let
           isDriverFlag = f: lib.hasPrefix "-Dgallium-drivers=" f || lib.hasPrefix "-Dvulkan-drivers=" f;
           filtered = builtins.filter (f: !isDriverFlag f) flags;
         in
-       if galliumDrivers == null && vulkanDrivers == null then
-         flags
-       else
-         filtered
+        if galliumDrivers == null && vulkanDrivers == null then
+          flags
+        else
+          filtered
           ++ lib.optional (galliumDrivers != null) (
             lib.mesonOption "gallium-drivers" (lib.concatStringsSep "," galliumDrivers)
           )
