@@ -209,9 +209,10 @@ nix eval .#mesa-git.version       # confirm pinned commit + version string
 This script:
 
 1. Fetches the latest commit SHA from `gitlab.freedesktop.org/mesa/mesa` `main`
-2. Computes the source hash with `nix-prefetch-git`
-3. Sparse-clones `subprojects/*.wrap` to regenerate `wraps.json` (Rust crate dependencies)
-4. Writes `version.json`
+2. Computes the source hash with `nix store prefetch-file`
+3. Extracts the Mesa version string from the `VERSION` file
+4. Sparse-clones `subprojects/*.wrap` to regenerate `wraps.json` (Rust crate dependencies)
+5. Writes `version.json` and updates the README version table
 
 After updating, test with:
 
@@ -243,15 +244,22 @@ mesa-git-nix/
 ├── module.nix                  # NixOS module: mesa-git.enable + drivers option
 ├── clang-libdir-option.meson   # Meson option snippet (avoids Nix string escaping)
 ├── version.json                # Pinned commit: rev, hash, version, date
+├── libdrm-version.json         # Pinned libdrm commit (companion package)
 ├── wraps.json                  # Rust crate deps for MESON_PACKAGE_CACHE_DIR
 ├── scripts/
-│   ├── update.sh                # Canonical updater (synced from standard)
+│   ├── update.sh                # Custom updater: bumps Mesa pin + regenerates wraps.json
 │   ├── check-readme-sections.sh # Pre-commit README lint
 │   └── update-readme-options.sh # README options section generator
+├── .github/
+│   ├── update.json              # Updater config (custom type)
+│   └── workflows/
+│       ├── ci.yml               # CI: eval, format, build, Mesa verification
+│       ├── update.yml            # Auto-update (runs scripts/update.sh)
+│       ├── maintenance.yml       # Weekly flake.lock bumps
+│       └── drift-check.yml       # Verifies standard file integrity
 ├── LICENSE
 └── README.md
 ```
-
 <!-- BEGIN generated:options -->
 ## Options
 

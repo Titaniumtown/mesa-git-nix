@@ -41,7 +41,7 @@
         }
       );
 
-      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-tree);
+      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
 
       checks = forAllSystems (system: {
         pre-commit = git-hooks.lib.${system}.run {

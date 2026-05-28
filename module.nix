@@ -6,11 +6,13 @@
 }:
 let
   cfg = config.mesa-git;
-
   mesaPkg = if cfg.drivers == [ ] then pkgs.mesa-git else pkgs.mkMesaGit { vendors = cfg.drivers; };
 
   mesaPkg32 =
-    if cfg.drivers == [ ] then pkgs.mesa-git-32 else pkgs.mkMesaGit32 { vendors = cfg.drivers; };
+    if pkgs.stdenv.hostPlatform.isx86_64 then
+      if cfg.drivers == [ ] then pkgs.mesa-git-32 else pkgs.mkMesaGit32 { vendors = cfg.drivers; }
+    else
+      null;
 in
 {
   options.mesa-git = {
@@ -36,8 +38,12 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
-    hardware.graphics.package = lib.mkForce mesaPkg;
-    hardware.graphics.package32 = lib.mkForce mesaPkg32;
-  };
+  config = lib.mkIf cfg.enable (
+    {
+      hardware.graphics.package = lib.mkForce mesaPkg;
+    }
+    // lib.optionalAttrs (mesaPkg32 != null) {
+      hardware.graphics.package32 = lib.mkForce mesaPkg32;
+    }
+  );
 }

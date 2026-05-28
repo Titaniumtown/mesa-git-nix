@@ -105,17 +105,13 @@ trap 'rm -rf "$TMPDIR"' EXIT
   git remote add origin "$REPO_URL"
   git fetch --depth 1 origin "$REV" 2>&1 | tail -1
   git checkout FETCH_HEAD -- subprojects/ 2>/dev/null
-)
-
-log "Generating wraps.json..."
-python3 <<'PYEOF'
+  log "Generating wraps.json..."
+  python3 <<'PYEOF'
 import configparser, pathlib, json, base64, binascii, urllib.parse
-
 def to_sri(h):
     raw = binascii.unhexlify(h)
     b64 = base64.b64encode(raw).decode()
     return f"sha256-{b64}"
-
 result = []
 for f in sorted(pathlib.Path("subprojects").glob("*.wrap")):
     p = configparser.ConfigParser()
@@ -131,25 +127,24 @@ for f in sorted(pathlib.Path("subprojects").glob("*.wrap")):
     version = parts[4]
     h = p.get("wrap-file", "source_hash")
     result.append({"pname": name, "version": version, "hash": to_sri(h)})
-
 with open("wraps_out.json", "w") as fd:
     json.dump(result, fd, indent=4)
     fd.write("\n")
 PYEOF
-
+)
 cp "$TMPDIR/wraps_out.json" "$ROOT_DIR/wraps.json"
+
 
 # --- Update README version table -------------------------------------------
 log "Updating README.md..."
 SHORT_REV="${REV:0:12}"
 COMMIT_URL="https://gitlab.freedesktop.org/mesa/mesa/-/commit/${REV}"
-sed -i \
-  -e "s@^| \*\*Rev\*\*     |.*@| **Rev**     | [\`${SHORT_REV}\`](${COMMIT_URL}) |@" \
-  -e "s@^| \*\*Version\*\* |.*@| **Version** | \`${VERSION_STRING}\` |@" \
-  -e "s@^| \*\*Date\*\*    |.*@| **Date**    | ${DATE} |@" \
+ sed -i \
+  -e "s@^| Rev     |.*@| Rev     | [\`${SHORT_REV}\`](${COMMIT_URL}) |@" \
+  -e "s@^| Version |.*@| Version | \`${VERSION_STRING}\` |@" \
+  -e "s@^| Date    |.*@| Date    | ${DATE} |@" \
   "$ROOT_DIR/README.md"
 
-# --- Verification ----------------------------------------------------------
 log "Step 1/2: nix flake check --no-build"
 if ! nix flake check --no-build 2>&1; then
   err "Eval check failed"

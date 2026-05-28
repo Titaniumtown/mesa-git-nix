@@ -142,13 +142,16 @@ let
           isDriverFlag = f: lib.hasPrefix "-Dgallium-drivers=" f || lib.hasPrefix "-Dvulkan-drivers=" f;
           filtered = builtins.filter (f: !isDriverFlag f) flags;
         in
-        filtered
-        ++ lib.optional (galliumDrivers != null) (
-          lib.mesonOption "gallium-drivers" (lib.concatStringsSep "," galliumDrivers)
-        )
-        ++ lib.optional (vulkanDrivers != null) (
-          lib.mesonOption "vulkan-drivers" (lib.concatStringsSep "," vulkanDrivers)
-        );
+       if galliumDrivers == null && vulkanDrivers == null then
+         flags
+       else
+         filtered
+          ++ lib.optional (galliumDrivers != null) (
+            lib.mesonOption "gallium-drivers" (lib.concatStringsSep "," galliumDrivers)
+          )
+          ++ lib.optional (vulkanDrivers != null) (
+            lib.mesonOption "vulkan-drivers" (lib.concatStringsSep "," vulkanDrivers)
+          );
 
       # Filter outputs: remove spirv2dxil/cross_tools when their drivers aren't built
       filterOutputs =
@@ -211,7 +214,7 @@ let
         # Disable rusticl ICD file auto-install (nixpkgs constructs its own with absolute path).
         if [ -f src/gallium/targets/rusticl/meson.build ]; then
           if grep -qF "install : true" src/gallium/targets/rusticl/meson.build; then
-            sed -i '/configure_file/,/^)/{s/install : true/install : false/}' \
+            sed -i 's/install : true/install : false/' \
               src/gallium/targets/rusticl/meson.build
             if grep -qF "install : true" src/gallium/targets/rusticl/meson.build; then
               echo "WARNING: rusticl ICD install : true may not have been fully replaced"

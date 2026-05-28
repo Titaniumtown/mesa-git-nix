@@ -29,5 +29,5 @@ fi
 
 [ "$errors" -eq 0 ] && exit 0
 echo ""
-echo "Fix: run 'bash .ai-context/repo-standard/sync.sh $(basename "$PWD")' from the main nix repo"
-exit 1
+echo "Fix: ensure README.md has the required <!-- BEGIN generated:... --> and <!-- END generated:... --> splice markers."
+echo "See scripts/update-readme-options.sh for the options section generator."
