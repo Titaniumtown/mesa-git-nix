@@ -211,11 +211,14 @@ let
           cat ${./clang-libdir-option.meson} >> meson.options
         fi
         # Disable rusticl ICD file auto-install (nixpkgs constructs its own with absolute path).
+        # Use a targeted sed range: only replace install : true within the configure_file
+        # block that installs the ICD, not the shared_library block above it.
         if [ -f src/gallium/targets/rusticl/meson.build ]; then
           if grep -qF "install : true" src/gallium/targets/rusticl/meson.build; then
-            sed -i 's/install : true/install : false/' \
+            sed -i '/output : .rusticl.icd.,/,/install : true/s/install : true/install : false/' \
               src/gallium/targets/rusticl/meson.build
-            if grep -qF "install : true" src/gallium/targets/rusticl/meson.build; then
+            # Verify the ICD install was disabled but the library install was not
+            if grep -A5 "output : .rusticl.icd." src/gallium/targets/rusticl/meson.build | grep -qF "install : true"; then
               echo "WARNING: rusticl ICD install : true may not have been fully replaced"
             fi
           fi
